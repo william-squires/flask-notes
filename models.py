@@ -28,7 +28,7 @@ class User(db.Model):
     )
 
     password = db.Column(
-        db.String(100),
+        db.Text,
         nullable=False,
     )
 
@@ -47,7 +47,7 @@ class User(db.Model):
         db.String(30),
         nullable=False,
     )
-
+    #register may be a better name since this is on the class User
     @classmethod
     def register_user(cls, username, password, email, first_name, last_name):
         """Takes username, password, email, first_name, last_name.

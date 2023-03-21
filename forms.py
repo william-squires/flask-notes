@@ -6,10 +6,9 @@ from wtforms.validators import InputRequired, Length
 
 class RegisterUserForm(FlaskForm):
     """Form for registering users."""
-
     username = StringField(
         "Username",
-        validators=[InputRequired()])
+        validators=[InputRequired(), Length(min=3, max=20)])
 
     password = PasswordField(
         "Password",
@@ -18,17 +17,17 @@ class RegisterUserForm(FlaskForm):
 
     email = EmailField(
         "Email",
-        validators=[InputRequired()]
+        validators=[InputRequired(), Length(max=50)]
     )
 
     first_name = StringField(
         "First Name",
-        validators=[InputRequired()]
+        validators=[InputRequired(), Length(max=30)]
     )
 
     last_name = StringField(
         "Last Name",
-        validators=[InputRequired()]
+        validators=[InputRequired(), Length(max=30)]
     )
 
 
@@ -37,7 +36,7 @@ class LoginUserForm(FlaskForm):
 
     username = StringField(
         "Username",
-        validators=[InputRequired()])
+        validators=[InputRequired(), Length(min=3, max=20)])
 
     password = PasswordField(
         "Password",
