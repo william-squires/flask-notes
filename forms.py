@@ -30,3 +30,16 @@ class RegisterUserForm(FlaskForm):
         "Last Name",
         validators=[InputRequired()]
     )
+
+
+class LoginUserForm(FlaskForm):
+    """Form for logging in users"""
+
+    username = StringField(
+        "Username",
+        validators=[InputRequired()])
+
+    password = PasswordField(
+        "Password",
+        validators=[InputRequired()]
+    )
