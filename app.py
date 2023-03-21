@@ -1,6 +1,6 @@
 import os
-#TODO: clean up imports as needed
-from flask import Flask, request, jsonify, render_template, redirect, session
+
+from flask import Flask, render_template, redirect, session
 from flask_debugtoolbar import DebugToolbarExtension
 
 from models import db, connect_db, User
@@ -91,7 +91,7 @@ def show_user_details(username):
 @app.post('/logout')
 def logout_user():
     """logs out the current user"""
-    
+
     form = LogoutForm()
 
     if form.validate_on_submit():
