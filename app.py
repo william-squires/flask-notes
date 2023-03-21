@@ -3,7 +3,7 @@ import os
 from flask import Flask, request, jsonify, render_template
 from flask_debugtoolbar import DebugToolbarExtension
 
-from models import db, connect_db, Cupcake, DEFAULT_IMAGE_URL
+from models import db, connect_db
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = "oh-so-secret"
