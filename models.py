@@ -5,6 +5,7 @@ bcrypt = Bcrypt()
 
 db = SQLAlchemy()
 
+
 def connect_db(app):
     """Connect this database to provided Flask app.
 
@@ -14,6 +15,7 @@ def connect_db(app):
     app.app_context().push()
     db.app = app
     db.init_app(app)
+
 
 class User(db.Model):
     """Models for Users"""
@@ -45,3 +47,19 @@ class User(db.Model):
         db.String(30),
         nullable=False,
     )
+
+    @classmethod
+    def register_user(cls, username, password, email, first_name, last_name):
+        """Takes username, password, email, first_name, last_name.
+           Hashes password and returns User.
+          """
+
+        hashed = bcrypt.generate_password_hash(password).decode('utf8')
+
+        return cls(
+            username=username,
+            password=hashed,
+            email=email,
+            first_name=first_name,
+            last_name=last_name
+            )
