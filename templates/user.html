@@ -9,20 +9,35 @@
   <h3>Email: {{ user.email }}</h3>
 
   <h2>Notes</h2>
-  <ul></ul>
+  <ul>
+    {% for note in user.notes %}
+      <div>
+        <h4>{{ note.title }}</h4>
+        <p>{{ note.content }}</p>
+        <form action="">
+          <button>Edit</button>
+        </form>
+        <form action="">
+          <button>Delete</button>
+        </form>
+      </div>
+    {% endfor %}
+  </ul>
 
-  
 
 
-  <form action="" >
+
+  <form action="/users/{{ user.username }}/notes/add">
     <button class="btn btn-primary">Add Note</button>
   </form>
 
   <form action="/logout" method="POST" >
+    {{ form.hidden_tag() }}
     <button class="btn btn-dark">Log out</button>
   </form>
 
-  <form action="" >
+  <form action="/users/{{ user.username }}/delete" method="POST">
+    {{ form.hidden_tag() }}
     <button class=" btn btn-danger">Delete User</button>
   </form>
 

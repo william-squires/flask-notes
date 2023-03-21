@@ -47,9 +47,11 @@ class User(db.Model):
         db.String(30),
         nullable=False,
     )
-    #register may be a better name since this is on the class User
+
+    notes = db.relationship('Note', backref='user')
+
     @classmethod
-    def register_user(cls, username, password, email, first_name, last_name):
+    def register(cls, username, password, email, first_name, last_name):
         """Takes username, password, email, first_name, last_name.
            Hashes password and returns User.
           """
@@ -62,10 +64,10 @@ class User(db.Model):
             email=email,
             first_name=first_name,
             last_name=last_name
-            )
+        )
 
     @classmethod
-    def authenticate_user(cls, username, password):
+    def authenticate(cls, username, password):
         """ Validates that the user exists and password is correct.
          Returns user if valid and False if not valid. """
 
@@ -75,3 +77,30 @@ class User(db.Model):
             return user
         else:
             return False
+
+
+class Note(db.Model):
+    """ Note model. Has a relatioinship with User model. """
+
+    __tablename__ = 'notes'
+
+    id = db.Column(
+        db.Integer,
+        primary_key=True,
+        autoincrement=True
+    )
+
+    title = db.Column(
+        db.String(100),
+        nullable=False
+    )
+
+    content = db.Column(
+        db.Text,
+        nullable=False
+    )
+
+    owner = db.Column(
+        db.ForeignKey('users.username'),
+        nullable=False
+    )

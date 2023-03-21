@@ -3,8 +3,8 @@ import os
 from flask import Flask, render_template, redirect, session, flash
 from flask_debugtoolbar import DebugToolbarExtension
 
-from models import db, connect_db, User
-from forms import RegisterUserForm, LoginUserForm, LogoutForm
+from models import db, connect_db, User, Note
+from forms import RegisterUserForm, LoginUserForm, CSRFForm, NoteForm
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = "oh-so-secret"
@@ -37,7 +37,7 @@ def register_user():
 
     if form.validate_on_submit():
 
-        user = User.register_user(
+        user = User.register(
             username=form.username.data,
             password=form.password.data,
             email=form.email.data,
@@ -67,12 +67,12 @@ def login_user():
 
     if form.validate_on_submit():
 
-        user = User.authenticate_user(
+        user = User.authenticate(
             username=form.username.data,
             password=form.password.data
         )
 
-        if user: 
+        if user:
             session['username'] = user.username
 
             return redirect(f'/users/{user.username}')
@@ -86,22 +86,74 @@ def login_user():
 def show_user_details(username):
     """ shows user info. If accessing wrong user, redirect to login """
 
+    form = CSRFForm()
+
     if username == session.get('username'):
 
         user = User.query.get(username)
 
-        return render_template('user.html', user=user)
+        return render_template('user.html', user=user, form=form)
     else:
         flash("Cannot access this user")
         return redirect('/login')
-    
+
 @app.post('/logout')
 def logout_user():
     """logs out the current user"""
 
-    form = LogoutForm()
+    form = CSRFForm()
 
     if form.validate_on_submit():
         session.pop("username", None)
 
     return redirect("/")
+
+
+@app.post('/users/<username>/delete')
+def delete_user(username):
+    """ delete user from database with all their notes,
+    then redirects to home """
+
+    form = CSRFForm()
+
+    if form.validate_on_submit() and username == session['username']:
+        session.pop("username", None)
+
+        user = User.query.get(username)
+        notes = user.notes
+
+        db.session.delete(notes)
+        db.session.delete(user)
+        db.session.commit()
+
+        return redirect('/')
+    else:
+        flash('Must be logged in.')
+
+        return redirect('/')
+
+@app.route('/users/<username>/notes/add', methods=['GET', 'POST'])
+def add_note(username):
+    """ add note and redirect to user page. """
+
+    form = NoteForm()
+
+    if username != session['username']:
+        flash('You must be logged in.')
+        return redirect('/')
+
+    if form.validate_on_submit():
+        note = Note(
+            title=form.title.data,
+            content=form.content.data,
+            owner=username
+        )
+
+        db.session.add(note)
+        db.session.commit()
+
+        return redirect(f'/users/{username}')
+    else:
+        return render_template('create_note.html', form=form)
+
+
