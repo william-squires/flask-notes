@@ -4,7 +4,7 @@ from flask import Flask, request, jsonify, render_template, redirect, session
 from flask_debugtoolbar import DebugToolbarExtension
 
 from models import db, connect_db, User
-from forms import RegisterUserForm, LoginUserForm
+from forms import RegisterUserForm, LoginUserForm, LogoutForm
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = "oh-so-secret"
@@ -87,3 +87,14 @@ def show_user_details(username):
         return render_template('user.html', user=user)
     else:
         return redirect('/login')
+    
+@app.post('/logout')
+def logout_user():
+    """logs out the current user"""
+    
+    form = LogoutForm()
+
+    if form.validate_on_submit():
+        session.pop("username", None)
+
+    return redirect("/")

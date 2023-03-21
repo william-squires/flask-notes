@@ -43,3 +43,6 @@ class LoginUserForm(FlaskForm):
         "Password",
         validators=[InputRequired()]
     )
+
+class LogoutForm(FlaskForm):
+    """empty form for CSRF on logout"""
