@@ -5,6 +5,7 @@ from flask_debugtoolbar import DebugToolbarExtension
 
 from models import db, connect_db, User, Note
 from forms import RegisterUserForm, LoginUserForm, CSRFForm, NoteForm
+from werkzeug.exceptions import Unauthorized
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = "oh-so-secret"
@@ -91,16 +92,12 @@ def login_user():
 def show_user_details(username):
     """ shows user info. If accessing wrong user, redirect to login """
 
+    redirect_if_invalid_creditials(username)
+
     form = CSRFForm()
+    user = User.query.get(username)
 
-    if username == session.get('username'):
-
-        user = User.query.get(username)
-
-        return render_template('user.html', user=user, form=form)
-    else:
-        flash("Cannot access this user")
-        return redirect('/login')
+    return render_template('user.html', user=user, form=form)
 
 
 @app.post('/logout')
@@ -120,7 +117,7 @@ def delete_user(username):
     """ delete user from database with all their notes,
     then redirects to home """
 
-    redirect_if_not_logged_in(username)
+    redirect_if_invalid_creditials(username)
     form = CSRFForm()
 
     if form.validate_on_submit():
@@ -136,18 +133,19 @@ def delete_user(username):
 
         return redirect('/')
     else:
-        flash('Must be logged in.')
-
-        return redirect('/')
+        raise Unauthorized()
 
 
 @app.route('/users/<username>/notes/add', methods=['GET', 'POST'])
 def add_note(username):
-    """ add note and redirect to user page. """
+    """Handles adding notes for a user.
+        GET: Render add note form.
+        POST: add note to database. 
+        """
 
     form = NoteForm()
 
-    redirect_if_not_logged_in(username)
+    redirect_if_invalid_creditials(username)
 
     if form.validate_on_submit():
         note = Note(
@@ -166,14 +164,16 @@ def add_note(username):
 
 @app.route('/notes/<int:note_id>/update', methods=['GET', 'POST'])
 def update_note(note_id):
-    """ update note and redirect to user page. """
-
+    """Handles updating a note for a user.
+        GET: Render update note form.
+        POST: updates note in database. 
+        """
     note = Note.query.get_or_404(note_id)
     username = note.user.username
 
-    redirect_if_not_logged_in(username)
+    redirect_if_invalid_creditials(username)
 
-    form = NoteForm()
+    form = NoteForm(obj=note)
 
     if form.validate_on_submit():
         note.title = form.title.data
@@ -183,20 +183,17 @@ def update_note(note_id):
 
         return redirect(f'/users/{note.user.username}')
     else:
-
-        form.title.data = note.title
-        form.content.data = note.content
         return render_template('update_note.html', form=form)
 
 
 @app.post('/notes/<int:note_id>/delete')
 def delete_note(note_id):
-    """ delete a user's note"""
+    """Deletes a user's note from database"""
 
     note = Note.query.get_or_404(note_id)
     username = note.user.username
 
-    redirect_if_not_logged_in(username)
+    redirect_if_invalid_creditials(username)
 
     form = CSRFForm()
 
@@ -207,12 +204,12 @@ def delete_note(note_id):
 
         return redirect(f'/users/{username}')
     else:
-        flash('Must be logged in.')
-
-        return redirect('/')
+        raise Unauthorized()
 
 
-def redirect_if_not_logged_in(username):
-    if username != session['username']:
+def redirect_if_invalid_creditials(username):
+    """Redirects the user to home if not logged in or logged in as wrong user"""
+
+    if not session.get("username") or username != session['username']:
         flash('You must be logged in.')
         return redirect('/')
