@@ -29,9 +29,14 @@ def redirect_to_register():
 
     return redirect("/register")
 
+
 @app.route("/register", methods=["GET", "POST"])
 def register_user():
     """Registers a user if form is submitted. Otherwise shows register form."""
+
+    if session.get("username"):
+        flash("Cannot register while logged in")
+        return redirect(f"/users/{session['username']}")
 
     form = RegisterUserForm()
 
@@ -61,7 +66,7 @@ def login_user():
         user is already logged in. Otherwise renders login form"""
 
     if session.get("username"):
-        return redirect (f"/users/{session['username']}")
+        return redirect(f"/users/{session['username']}")
 
     form = LoginUserForm()
 
@@ -97,6 +102,7 @@ def show_user_details(username):
         flash("Cannot access this user")
         return redirect('/login')
 
+
 @app.post('/logout')
 def logout_user():
     """logs out the current user"""
@@ -114,15 +120,17 @@ def delete_user(username):
     """ delete user from database with all their notes,
     then redirects to home """
 
+    redirect_if_not_logged_in(username)
     form = CSRFForm()
 
-    if form.validate_on_submit() and username == session['username']:
+    if form.validate_on_submit():
         session.pop("username", None)
 
         user = User.query.get(username)
         notes = user.notes
 
-        db.session.delete(notes)
+        for note in notes:
+            db.session.delete(note)
         db.session.delete(user)
         db.session.commit()
 
@@ -132,15 +140,14 @@ def delete_user(username):
 
         return redirect('/')
 
+
 @app.route('/users/<username>/notes/add', methods=['GET', 'POST'])
 def add_note(username):
     """ add note and redirect to user page. """
 
     form = NoteForm()
 
-    if username != session['username']:
-        flash('You must be logged in.')
-        return redirect('/')
+    redirect_if_not_logged_in(username)
 
     if form.validate_on_submit():
         note = Note(
@@ -157,3 +164,55 @@ def add_note(username):
         return render_template('create_note.html', form=form)
 
 
+@app.route('/notes/<int:note_id>/update', methods=['GET', 'POST'])
+def update_note(note_id):
+    """ update note and redirect to user page. """
+
+    note = Note.query.get_or_404(note_id)
+    username = note.user.username
+
+    redirect_if_not_logged_in(username)
+
+    form = NoteForm()
+
+    if form.validate_on_submit():
+        note.title = form.title.data
+        note.content = form.content.data
+
+        db.session.commit()
+
+        return redirect(f'/users/{note.user.username}')
+    else:
+
+        form.title.data = note.title
+        form.content.data = note.content
+        return render_template('update_note.html', form=form)
+
+
+@app.post('/notes/<int:note_id>/delete')
+def delete_note(note_id):
+    """ delete a user's note"""
+
+    note = Note.query.get_or_404(note_id)
+    username = note.user.username
+
+    redirect_if_not_logged_in(username)
+
+    form = CSRFForm()
+
+    if form.validate_on_submit():
+
+        db.session.delete(note)
+        db.session.commit()
+
+        return redirect(f'/users/{username}')
+    else:
+        flash('Must be logged in.')
+
+        return redirect('/')
+
+
+def redirect_if_not_logged_in(username):
+    if username != session['username']:
+        flash('You must be logged in.')
+        return redirect('/')

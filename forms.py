@@ -43,6 +43,7 @@ class LoginUserForm(FlaskForm):
         validators=[InputRequired()]
     )
 
+
 class NoteForm(FlaskForm):
     """Form for adding a new note"""
 
@@ -55,6 +56,21 @@ class NoteForm(FlaskForm):
         "Content",
         validators=[InputRequired()]
     )
+
+
+class EditNoteForm(FlaskForm):
+    """Form for adding a new note"""
+
+    title = StringField(
+        "Title",
+        validators=[InputRequired(), Length(max=100)],
+    )
+
+    content = TextAreaField(
+        "Content",
+        validators=[InputRequired()],
+    )
+
 
 class CSRFForm(FlaskForm):
     """empty form for CSRF on logout"""

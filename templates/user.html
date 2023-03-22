@@ -14,10 +14,11 @@
       <div>
         <h4>{{ note.title }}</h4>
         <p>{{ note.content }}</p>
-        <form action="">
+        <form action="/notes/{{ note.id }}/update">
           <button>Edit</button>
         </form>
-        <form action="">
+        <form action="/notes/{{ note.id }}/delete" method="POST">
+          {{ form.hidden_tag() }}
           <button>Delete</button>
         </form>
       </div>
